@@ -45,11 +45,11 @@ A mobile app that allows to research and save movies.
 | [![My Skills](https://skillicons.dev/icons?i=react&theme=light)](https://react.dev/)                                  | React     | [![My Skills](https://skillicons.dev/icons?i=nextjs&theme=light)]([https://nodejs.org/en](https://nextjs.org/))      | Next.js  
 
 ## Preview
-### Carousel: Headlines Of The Day
+### Carousel: Movie Of The Day
 
 ![Movies Of The Day](./assets/moviesoftheday.gif)
 
-### Search Articles
+### Search Movies
 
 ![Search Movies](./assets/search.gif)
 
@@ -57,7 +57,7 @@ A mobile app that allows to research and save movies.
 
 ![Login](./assets/login.gif)
 
-### Favorites
+### Favorite Movies
 
 ![Favorites](./assets/favorite.gif)
 
