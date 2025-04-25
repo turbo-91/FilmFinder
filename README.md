@@ -52,6 +52,8 @@ A website that allows to research and save movies.
 ### Login
 
 ![Login](./public/login.gif)
+<img src="./public/login.gif" alt="Login" width="1920" height="auto" />
+
 
 ### Search Movies
 
