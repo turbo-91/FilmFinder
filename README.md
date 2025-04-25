@@ -1,4 +1,4 @@
-# News App
+# FilmFinder
 
 ## Running the project
 
