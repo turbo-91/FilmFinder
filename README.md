@@ -47,18 +47,18 @@ A website that allows to research and save movies.
 ## Preview
 ### Carousel: Movie Of The Day
 
-![Movies Of The Day](./assets/moviesoftheday.gif)
+![Movies Of The Day](./public/moviesoftheday.gif)
 
 ### Login
 
-![Login](./assets/login.gif)
+![Login](./public/login.gif)
 
 ### Search Movies
 
-![Search Movies](./assets/search.gif)
+![Search Movies](./public/search.gif)
 
 ### Favorite Movies
 
-![Favorites](./assets/favorite.gif)
+![Favorites](./public/favorite.gif)
 
 
