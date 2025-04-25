@@ -49,13 +49,13 @@ A website that allows to research and save movies.
 
 ![Movies Of The Day](./assets/moviesoftheday.gif)
 
-### Search Movies
-
-![Search Movies](./assets/search.gif)
-
 ### Login
 
 ![Login](./assets/login.gif)
+
+### Search Movies
+
+![Search Movies](./assets/search.gif)
 
 ### Favorite Movies
 
