@@ -47,20 +47,20 @@ A website that allows to research and save movies.
 ## Preview
 ### Carousel: Movie Of The Day
 
-<img src="./public/moviesoftheday.gif" alt="Movies Of The Day" width="1920" height="auto" />
+<img src="./public/moviesoftheday1.gif" alt="Movies Of The Day" width="960" height="auto" />
 
 ### Login
 
-<img src="./public/login copy.gif" alt="Login" width="1920" height="auto" />
+<img src="./public/login copy.gif" alt="Login" width="960" height="auto" />
 
 
 ### Search Movies
 
-![Search Movies](./public/search.gif)
+<img src="./public/search1.gif" alt="Login" width="960" height="auto" />
 
 ### Favorite Movies
-
-![Favorites](./public/favorite.gif)
+ 
+<img src="./public/favorite1.gif" alt="Login" width="960" height="auto" />
 
 
 
