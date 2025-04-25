@@ -47,7 +47,7 @@ A website that allows to research and save movies.
 ## Preview
 ### Carousel: Movie Of The Day
 
-![Movies Of The Day](./public/moviesoftheday.gif)
+<img src="./public/moviesoftheday.gif" alt="Movies Of The Day" width="1920" height="auto" />
 
 ### Login
 
@@ -60,5 +60,6 @@ A website that allows to research and save movies.
 ### Favorite Movies
 
 ![Favorites](./public/favorite.gif)
+
 
 
