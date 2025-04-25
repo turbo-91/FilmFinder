@@ -41,7 +41,7 @@ A mobile app that allows to research and save movies.
 
 |                                                                                                                       |           |                                                                                                |            |
 | --------------------------------------------------------------------------------------------------------------------- | --------- | ---------------------------------------------------------------------------------------------- | ---------- |
-| [![My Skills](https://skillicons.dev/icons?i=css&theme=light)](https://developer.mozilla.org/en-US/docs/Web/CSS)      | CSS       | [![My Skills](https://skillicons.dev/icons?i=js&theme=light)](https://developer.mozilla.org/en/TypeScript) | Typescript |
+| [![My Skills](https://skillicons.dev/icons?i=css&theme=light)](https://developer.mozilla.org/en-US/docs/Web/CSS)      | CSS       | [![My Skills](https://skillicons.dev/icons?i=ts&theme=light)](https://developer.mozilla.org/en/TypeScript) | Typescript |
 | [![My Skills](https://skillicons.dev/icons?i=react&theme=light)](https://react.dev/)                                  | React     | [![My Skills](https://skillicons.dev/icons?i=nextjs&theme=light)]([https://nodejs.org/en](https://nextjs.org/))      | Next.js  
 
 ## Preview
