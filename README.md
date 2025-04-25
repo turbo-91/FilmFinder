@@ -28,7 +28,7 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 
 ## Overview 
 
-A mobile app that allows to research and save movies.
+A website that allows to research and save movies.
 
 ## Features
 
