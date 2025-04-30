@@ -1,5 +1,5 @@
 import { createMocks } from "node-mocks-http";
-import movieByIdHandler from "@/pages/api/movieById";
+import movieByIdHandler from "@/pages/api/movies/[id]";
 import { getMovieById } from "@/services/movieDB";
 import handleApiError from "@/lib/handleApiError";
 

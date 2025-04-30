@@ -2,7 +2,7 @@
 import { createMocks } from "node-mocks-http";
 import mongoose from "mongoose";
 import { MongoMemoryServer } from "mongodb-memory-server";
-import movieByIdHandler from "@/pages/api/movieById";
+import movieByIdHandler from "@/pages/api/movies/[id]";
 import { getMovieById } from "@/services/movieDB";
 import handleApiError from "@/lib/handleApiError";
 
