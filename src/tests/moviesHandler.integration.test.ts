@@ -1,4 +1,3 @@
-// src/tests/moviesHandler.integration.test.ts
 import { createMocks } from "node-mocks-http";
 import mongoose from "mongoose";
 import { MongoMemoryServer } from "mongodb-memory-server";
@@ -12,20 +11,15 @@ import {
 
 jest.setTimeout(30000);
 
-// ---- Variables to fill in ----
 let moviesHandler: (req: any, res: any) => Promise<void>;
 let Movie: mongoose.Model<any>;
 let mongoServer: MongoMemoryServer;
 
 beforeAll(async () => {
-  // 1) Start in‐memory MongoDB
   mongoServer = await MongoMemoryServer.create();
   process.env.MONGODB_URI = mongoServer.getUri();
-
-  // 2) Connect mongoose
   await mongoose.connect(process.env.MONGODB_URI!, { dbName: "testdb" });
 
-  // 3) Dynamically import after env var is set
   const moviesMod = await import("@/pages/api/movies");
   moviesHandler = moviesMod.default;
   const movieMod = await import("@/db/models/Movie");
@@ -33,21 +27,15 @@ beforeAll(async () => {
 });
 
 afterEach(async () => {
-  // wipe collection between tests
   await Movie.deleteMany({});
 });
 
 afterAll(async () => {
-  // tear down mongoose & in-memory server
   await mongoose.disconnect();
   await mongoServer.stop();
-
-  // close the extra mongo driver pool from "@/db/mongodb"
   const { clientPromise } = await import("@/db/mongodb");
   const client = await clientPromise;
   await client.close();
-
-  // allow any lingering handles to finish
   await new Promise((r) => setTimeout(r, 50));
 });
 
@@ -61,7 +49,15 @@ describe("Movies API — Integration Test", () => {
     const data = res._getJSONData();
     expect(Array.isArray(data)).toBe(true);
     expect(data).toHaveLength(3);
-    expect(data[0].title).toBe(movieSeed1.title);
+
+    const titles = data.map((m: any) => m.title);
+    expect(titles).toEqual(
+      expect.arrayContaining([
+        movieSeed1.title,
+        movieSeed2.title,
+        movieSeed3.title,
+      ])
+    );
   });
 
   it("getAllMovies → 404 when none exist", async () => {
