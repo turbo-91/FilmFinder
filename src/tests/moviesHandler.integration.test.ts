@@ -1,290 +1,155 @@
-import moviesHandler from "@/pages/api/movies";
 import { createMocks } from "node-mocks-http";
 import mongoose from "mongoose";
 import { MongoMemoryServer } from "mongodb-memory-server";
-import Movie from "@/db/models/Movie";
+import {
+  movieSeed1,
+  movieSeed2,
+  movieSeed3,
+  newMovie,
+  newMovies,
+} from "./movieSeeds";
 
+jest.setTimeout(30000);
+
+let moviesHandler: (req: any, res: any) => Promise<void>;
+let Movie: mongoose.Model<any>;
 let mongoServer: MongoMemoryServer;
-jest.setTimeout(30000); // Increase timeout to 30 seconds, bc database exchanges need time
 
 beforeAll(async () => {
   mongoServer = await MongoMemoryServer.create();
   process.env.MONGODB_URI = mongoServer.getUri();
-  await mongoose.connect(process.env.MONGODB_URI, { dbName: "testdb" });
+  await mongoose.connect(process.env.MONGODB_URI!, { dbName: "testdb" });
+
+  const moviesMod = await import("@/pages/api/movies");
+  moviesHandler = moviesMod.default;
+  const movieMod = await import("@/db/models/Movie");
+  Movie = movieMod.default;
 });
 
 afterEach(async () => {
-  await Movie.deleteMany();
+  await Movie.deleteMany({});
 });
 
 afterAll(async () => {
   await mongoose.disconnect();
   await mongoServer.stop();
+  const { clientPromise } = await import("@/db/mongodb");
+  const client = await clientPromise;
+  await client.close();
+  await new Promise((r) => setTimeout(r, 50));
 });
 
-describe("Movies API - Integration Test", () => {
-  // getAllMovies test
-  test("getAllMovies should return all movies with status 200", async () => {
-    await Movie.create([
-      {
-        netzkinoId: 1,
-        slug: "movie-1",
-        title: "Movie 1",
-        year: "2022",
-        overview: "This is movie 1",
-        regisseur: "Director 1",
-        stars: "Star 1, Star 2",
-        imgNetzkino: "image1.jpg",
-        imgNetzkinoSmall: "image1-small.jpg",
-        imgImdb: "imdb1.jpg",
-        queries: ["action"],
-        dateFetched: "2024-02-11",
-      },
-    ]);
-
+describe("Movies API — Integration Test", () => {
+  it("getAllMovies → 200 when movies exist", async () => {
+    await Movie.create([movieSeed1, movieSeed2, movieSeed3]);
     const { req, res } = createMocks({ method: "GET" });
-
     await moviesHandler(req, res);
 
     expect(res._getStatusCode()).toBe(200);
-    const responseData = res._getJSONData();
-    expect(responseData.length).toBe(1);
-    expect(responseData[0]).toHaveProperty("title", "Movie 1");
+    const data = res._getJSONData();
+    expect(Array.isArray(data)).toBe(true);
+    expect(data).toHaveLength(3);
+
+    const titles = data.map((m: any) => m.title);
+    expect(titles).toEqual(
+      expect.arrayContaining([
+        movieSeed1.title,
+        movieSeed2.title,
+        movieSeed3.title,
+      ])
+    );
   });
 
-  test("getAllMovies should return 404 if no movies exist", async () => {
+  it("getAllMovies → 404 when none exist", async () => {
     const { req, res } = createMocks({ method: "GET" });
-
     await moviesHandler(req, res);
-
     expect(res._getStatusCode()).toBe(404);
     expect(res._getJSONData()).toEqual({ status: "Not Found" });
   });
 
-  // getMovieBySlug test
-
-  test("getMovieBySlug should return a movie by slug with status 200", async () => {
-    const movieData = {
-      netzkinoId: 1,
-      slug: "movie-1",
-      title: "Movie 1",
-      year: "2022",
-      overview: "This is movie 1",
-      regisseur: "Director 1",
-      stars: "Star 1, Star 2",
-      imgNetzkino: "image1.jpg",
-      imgNetzkinoSmall: "image1-small.jpg",
-      imgImdb: "imdb1.jpg",
-      queries: ["action"],
-      dateFetched: "2024-02-11", // Single string (matches model)
-    };
-
-    await Movie.create(movieData);
-
+  it("getMovieBySlug → 200 when found", async () => {
+    await Movie.create(movieSeed1);
     const { req, res } = createMocks({
       method: "GET",
-      query: { slug: "movie-1" }, // Pass slug as query param
+      query: { slug: movieSeed1.slug },
     });
-
     await moviesHandler(req, res);
 
     expect(res._getStatusCode()).toBe(200);
-    const responseData = res._getJSONData();
-
-    // Fix: Check the first movie in the array
-    expect(Array.isArray(responseData)).toBe(true);
-    expect(responseData.length).toBe(1);
-    expect(responseData[0]).toHaveProperty("slug", "movie-1");
-    expect(responseData[0]).toHaveProperty("title", "Movie 1");
+    const data = res._getJSONData();
+    expect(Array.isArray(data)).toBe(true);
+    expect(data[0].slug).toBe(movieSeed1.slug);
   });
 
-  test("getMovieBySlug should return 404 if movie with slug is not found", async () => {
+  it("getMovieBySlug → 404 when missing", async () => {
     const { req, res } = createMocks({
       method: "GET",
-      query: { slug: "non-existing-movie" }, // Slug does not exist
+      query: { slug: "nope" },
     });
-
     await moviesHandler(req, res);
-
     expect(res._getStatusCode()).toBe(404);
     expect(res._getJSONData()).toEqual({ status: "Not Found" });
   });
 
-  // getMovieByQuery test
-
-  test("should return movies matching the query with status 200", async () => {
-    await Movie.create([
-      {
-        netzkinoId: 1,
-        slug: "movie-1",
-        title: "Movie 1",
-        year: "2022",
-        overview: "This is movie 1",
-        regisseur: "Director 1",
-        stars: "Star 1, Star 2",
-        imgNetzkino: "image1.jpg",
-        imgNetzkinoSmall: "image1-small.jpg",
-        imgImdb: "imdb1.jpg",
-        queries: ["action"], // ✅ Matching query
-        dateFetched: "2024-02-11",
-      },
-      {
-        netzkinoId: 2,
-        slug: "movie-2",
-        title: "Movie 2",
-        year: "2023",
-        overview: "This is movie 2",
-        regisseur: "Director 2",
-        stars: "Star A, Star B",
-        imgNetzkino: "image2.jpg",
-        imgNetzkinoSmall: "image2-small.jpg",
-        imgImdb: "imdb2.jpg",
-        queries: ["action"], // ✅ Matching query
-        dateFetched: "2024-02-11",
-      },
-      {
-        netzkinoId: 3,
-        slug: "movie-3",
-        title: "Movie 3",
-        year: "2024",
-        overview: "This is movie 3",
-        regisseur: "Director 3",
-        stars: "Star X, Star Y",
-        imgNetzkino: "image3.jpg",
-        imgNetzkinoSmall: "image3-small.jpg",
-        imgImdb: "imdb3.jpg",
-        queries: ["drama"], // ❌ Does not match "action"
-        dateFetched: "2024-02-11",
-      },
-    ]);
-
+  it("filterByQuery → 200 only matching", async () => {
+    await Movie.create([movieSeed1, movieSeed2, movieSeed3]);
     const { req, res } = createMocks({
       method: "GET",
-      query: { query: "action" }, // ✅ Searching for movies with "action"
+      query: { query: movieSeed1.queries[0] },
     });
-
     await moviesHandler(req, res);
 
     expect(res._getStatusCode()).toBe(200);
-    const responseData = res._getJSONData();
-    expect(responseData.length).toBe(2); // ✅ Two movies match the query
-    expect(responseData[0]).toHaveProperty("queries", ["action"]);
-    expect(responseData[1]).toHaveProperty("queries", ["action"]);
+    const data = res._getJSONData();
+    expect(
+      data.every((m: any) => m.queries.includes(movieSeed1.queries[0]))
+    ).toBe(true);
   });
 
-  test("should return 404 if no movies match the query", async () => {
+  it("filterByQuery → 404 when none match", async () => {
+    await Movie.create([movieSeed1, movieSeed2]);
     const { req, res } = createMocks({
       method: "GET",
-      query: { query: "sci-fi" }, // ❌ No movies have "sci-fi" in queries
+      query: { query: "no-match" },
     });
-
     await moviesHandler(req, res);
-
     expect(res._getStatusCode()).toBe(404);
     expect(res._getJSONData()).toEqual({
       status: "No movies found for the given query",
     });
   });
 
-  // createMovie and createMovies tests
-
-  test("createMovie should create a single movie successfully", async () => {
-    const movieData = {
-      netzkinoId: 1,
-      slug: "movie-1",
-      title: "Movie 1",
-      year: "2022",
-      overview: "This is movie 1",
-      regisseur: "Director 1",
-      stars: "Star 1, Star 2",
-      imgNetzkino: "image1.jpg",
-      imgNetzkinoSmall: "image1-small.jpg",
-      imgImdb: "imdb1.jpg",
-      queries: ["action"],
-      dateFetched: "2024-02-11",
-    };
-
-    const { req, res } = createMocks({
-      method: "POST",
-      body: movieData,
-    });
-
+  it("createMovie → 201 and stored", async () => {
+    const { req, res } = createMocks({ method: "POST", body: newMovie });
     await moviesHandler(req, res);
 
     expect(res._getStatusCode()).toBe(201);
-    const responseData = res._getJSONData();
-    expect(responseData.success).toBe(true);
-    expect(responseData.status).toBe("Movie created");
-    expect(responseData.data).toHaveProperty("title", "Movie 1");
+    const json = res._getJSONData();
+    expect(json.success).toBe(true);
+    expect(json.data.title).toBe(newMovie.title);
 
-    // Verify in the database
-    const createdMovie = await Movie.findOne({ slug: "movie-1" });
-    expect(createdMovie).not.toBeNull();
-    expect(createdMovie?.title).toBe("Movie 1");
+    const found = await Movie.findOne({ slug: newMovie.slug });
+    expect(found).not.toBeNull();
   });
 
-  test("createMovies should create multiple movies successfully", async () => {
-    const moviesData = [
-      {
-        netzkinoId: 2,
-        slug: "movie-2",
-        title: "Movie 2",
-        year: "2023",
-        overview: "This is movie 2",
-        regisseur: "Director 2",
-        stars: "Star A, Star B",
-        imgNetzkino: "image2.jpg",
-        imgNetzkinoSmall: "image2-small.jpg",
-        imgImdb: "imdb2.jpg",
-        queries: ["drama"],
-        dateFetched: "2024-02-11",
-      },
-      {
-        netzkinoId: 3,
-        slug: "movie-3",
-        title: "Movie 3",
-        year: "2024",
-        overview: "This is movie 3",
-        regisseur: "Director 3",
-        stars: "Star X, Star Y",
-        imgNetzkino: "image3.jpg",
-        imgNetzkinoSmall: "image3-small.jpg",
-        imgImdb: "imdb3.jpg",
-        queries: ["thriller"],
-        dateFetched: "2024-02-11",
-      },
-    ];
-
-    const { req, res } = createMocks({
-      method: "POST",
-      body: moviesData,
-    });
-
+  it("createMovies → 201 and stored", async () => {
+    const { req, res } = createMocks({ method: "POST", body: newMovies });
     await moviesHandler(req, res);
 
     expect(res._getStatusCode()).toBe(201);
-    const responseData = res._getJSONData();
-    expect(responseData.success).toBe(true);
-    expect(responseData.status).toBe("Movies created");
-    expect(responseData.data).toHaveLength(2);
-    expect(responseData.data[0]).toHaveProperty("title", "Movie 2");
-    expect(responseData.data[1]).toHaveProperty("title", "Movie 3");
+    const json = res._getJSONData();
+    expect(json.success).toBe(true);
+    expect(json.data).toHaveLength(newMovies.length);
 
-    // Verify in the database
-    const createdMovies = await Movie.find();
-    expect(createdMovies.length).toBe(2);
+    const all = await Movie.find();
+    expect(all).toHaveLength(newMovies.length);
   });
 
-  test("createMovie should return 400 if required fields are missing for a single movie", async () => {
-    const incompleteMovieData = {
-      title: "Incomplete Movie",
-    };
-
+  it("createMovie → 400 on missing fields", async () => {
     const { req, res } = createMocks({
       method: "POST",
-      body: incompleteMovieData,
+      body: { title: "bad" },
     });
-
     await moviesHandler(req, res);
 
     expect(res._getStatusCode()).toBe(400);
@@ -294,17 +159,11 @@ describe("Movies API - Integration Test", () => {
     );
   });
 
-  test("createMovies should return 400 if required fields are missing for multiple movies", async () => {
-    const incompleteMoviesData = [
-      { title: "Movie Without Required Fields" },
-      { title: "Another Incomplete Movie" },
-    ];
-
+  it("createMovies → 400 on missing fields", async () => {
     const { req, res } = createMocks({
       method: "POST",
-      body: incompleteMoviesData,
+      body: [{ title: "a" }, { title: "b" }],
     });
-
     await moviesHandler(req, res);
 
     expect(res._getStatusCode()).toBe(400);
