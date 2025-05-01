@@ -2,6 +2,7 @@ import { createMocks } from "node-mocks-http";
 import movieByIdHandler from "@/pages/api/movies/[id]";
 import { getMovieById } from "@/services/movieDB";
 import handleApiError from "@/lib/handleApiError";
+import { movieSeed1 } from "./movieSeeds";
 
 jest.mock("@/services/movieDB", () => ({
   getMovieById: jest.fn(),
@@ -40,18 +41,17 @@ describe("movieByIdHandler – Unit Tests", () => {
   });
 
   it("returns 200 and movie when found", async () => {
-    const mockMovie = { _id: "1", title: "Test Movie" };
-    (getMovieById as jest.Mock).mockResolvedValue(mockMovie);
+    (getMovieById as jest.Mock).mockResolvedValue(movieSeed1);
 
     const { req, res } = createMocks({
       method: "GET",
-      query: { id: "1" },
+      query: { id: movieSeed1._id.toString() },
     });
     await movieByIdHandler(req as any, res as any);
 
-    expect(getMovieById).toHaveBeenCalledWith("1");
+    expect(getMovieById).toHaveBeenCalledWith(movieSeed1._id.toString());
     expect(res._getStatusCode()).toBe(200);
-    expect(res._getJSONData()).toEqual(mockMovie);
+    expect(res._getJSONData()).toEqual(movieSeed1);
   });
 
   it("returns 404 if movie not found", async () => {
@@ -74,11 +74,11 @@ describe("movieByIdHandler – Unit Tests", () => {
 
     const { req, res } = createMocks({
       method: "GET",
-      query: { id: "1" },
+      query: { id: movieSeed1._id.toString() },
     });
     await movieByIdHandler(req as any, res as any);
 
-    expect(getMovieById).toHaveBeenCalledWith("1");
+    expect(getMovieById).toHaveBeenCalledWith(movieSeed1._id.toString());
     expect(handleApiError).toHaveBeenCalledWith(
       res,
       "Error fetching movie by ID",
