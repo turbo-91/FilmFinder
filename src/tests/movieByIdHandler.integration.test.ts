@@ -1,7 +1,7 @@
-// src/tests/movieByIdHandler.integration.test.ts
 import { createMocks } from "node-mocks-http";
 import mongoose from "mongoose";
 import { MongoMemoryServer } from "mongodb-memory-server";
+import { movieSeed1 } from "./movieSeeds";
 
 jest.setTimeout(30000);
 
@@ -42,7 +42,6 @@ afterAll(async () => {
 
 describe("movieByIdHandler — Integration Tests", () => {
   beforeEach(async () => {
-    // Clear real Movie collection
     const { default: MovieModel } = await import("@/db/models/Movie");
     await MovieModel.deleteMany({});
     handleApiError.mockClear();
@@ -50,21 +49,7 @@ describe("movieByIdHandler — Integration Tests", () => {
 
   it("returns 200 and the movie from DB", async () => {
     const { default: MovieModel } = await import("@/db/models/Movie");
-    const seeded = await MovieModel.create({
-      _id: 100,
-      netzkinoId: 100,
-      slug: "seed",
-      title: "Seeded Movie",
-      year: ["2025"],
-      regisseur: ["Dir"],
-      stars: ["Star"],
-      overview: "Test",
-      imgNetzkino: "x.jpg",
-      imgNetzkinoSmall: "x-small.jpg",
-      posterImdb: "p.jpg",
-      backdropImdb: "b.jpg",
-      queries: ["q"],
-    });
+    const seeded = await MovieModel.create(movieSeed1);
 
     const { req, res } = createMocks({
       method: "GET",
@@ -113,7 +98,6 @@ describe("movieByIdHandler — Integration Tests", () => {
   });
 
   it("uses handleApiError on unexpected errors", async () => {
-    // Force the service layer to throw by mocking getMovieById at runtime:
     const serviceMod = await import("@/services/movieDB");
     jest.spyOn(serviceMod, "getMovieById").mockRejectedValue(new Error("fail"));
 
