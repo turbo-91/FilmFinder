@@ -1,77 +1,87 @@
+// src/tests/getSearchResultsHandler.integration.test.ts
+
 import { createMocks } from "node-mocks-http";
 import mongoose from "mongoose";
 import { MongoMemoryServer } from "mongodb-memory-server";
 import { movieSeed1, movieSeed2 } from "./movieSeeds";
 
-// Stub out dbConnect so no real Mongo client pools linger
-jest.mock("@/db/mongodb", () => ({
-  __esModule: true,
-  default: jest.fn().mockResolvedValue(null),
+// Stub only the downstream service and error-handler
+jest.mock("@/services/movieService", () => ({
+  getSearchMovies: jest.fn(),
 }));
-
-jest.setTimeout(30000);
-
-// Stub out the movieService to avoid loading static assets and downstream fetchers
-jest.mock("@/services/movieService", () => ({ getSearchMovies: jest.fn() }));
-
-// Mock only the error handler
 jest.mock("@/lib/handleApiError", () =>
-  jest.fn((res, message, error) => res.status(500).json({ error: message }))
+  jest.fn((res, msg, err) => res.status(500).json({ error: msg }))
 );
 
 let getSearchResults: (req: any, res: any) => Promise<void>;
-let serviceMod: typeof import("@/services/movieService");
+let getSearchMovies: jest.Mock;
 let handleApiError: jest.Mock;
+// loosen the type here so it matches whatever dbConnect actually returns
+let dbConnect: () => Promise<any>;
+let clientPromise: Promise<any>;
+
 let mongoServer: MongoMemoryServer;
 
+jest.setTimeout(30000);
+
 beforeAll(async () => {
-  // start in-memory MongoDB and set env
+  // 1) Spin up in-memory MongoDB and set the envvar
   mongoServer = await MongoMemoryServer.create();
   process.env.MONGODB_URI = mongoServer.getUri();
-  await mongoose.connect(process.env.MONGODB_URI!, { dbName: "testdb" });
 
-  // clear module cache so handler picks up env
-  jest.resetModules();
+  // 2) Dynamically import the DB-connector now that the env is set
+  const dbMod = await import("@/db/mongodb");
+  dbConnect = dbMod.default;
+  clientPromise = dbMod.clientPromise;
 
-  // import handler and modules after env is set
+  // 3) Connect via your real dbConnect()
+  await dbConnect();
+
+  // 5) Dynamically import your handler & its mocks
   const routeMod = await import("@/pages/api/movies/search");
   getSearchResults = routeMod.default;
 
-  serviceMod = await import("@/services/movieService");
+  const svc = await import("@/services/movieService");
+  getSearchMovies = svc.getSearchMovies as jest.Mock;
 
-  const errorMod = await import("@/lib/handleApiError");
-  handleApiError = errorMod.default as jest.Mock;
+  const errMod = await import("@/lib/handleApiError");
+  handleApiError = errMod.default as jest.Mock;
 });
 
 afterAll(async () => {
+  // 1) Disconnect mongoose
   await mongoose.disconnect();
+  // 2) Stop the in-memory server
   await mongoServer.stop();
-  // No real dbConnect client to close, since we mocked it
+  // 3) Close the native client from dbConnect
+  const client = await clientPromise;
+  await client.close();
 });
 
-describe("getSearchResults — Integration Tests", () => {
-  beforeEach(() => jest.clearAllMocks());
+describe("getSearchResults — Full Integration Tests", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
 
-  it("returns 400 when query param is missing", async () => {
+  it("400 if no query", async () => {
     const { req, res } = createMocks({ method: "GET", query: {} });
     await getSearchResults(req, res);
-
     expect(res._getStatusCode()).toBe(400);
     expect(res._getJSONData()).toEqual({
       error: "Query parameter is required",
     });
-    expect(serviceMod.getSearchMovies).not.toHaveBeenCalled();
+    expect(getSearchMovies).not.toHaveBeenCalled();
   });
 
-  it("returns 200 with empty results when service returns []", async () => {
-    jest.spyOn(serviceMod, "getSearchMovies").mockResolvedValue([]);
+  it("200 + empty array when none found", async () => {
+    (getSearchMovies as jest.Mock).mockResolvedValue([]);
     const { req, res } = createMocks({
       method: "GET",
       query: { query: movieSeed1.title },
     });
     await getSearchResults(req, res);
 
-    expect(serviceMod.getSearchMovies).toHaveBeenCalledWith(movieSeed1.title);
+    expect(getSearchMovies).toHaveBeenCalledWith(movieSeed1.title);
     expect(res._getStatusCode()).toBe(200);
     expect(res._getJSONData()).toEqual({
       results: [],
@@ -79,29 +89,29 @@ describe("getSearchResults — Integration Tests", () => {
     });
   });
 
-  it("returns 200 with movies when service returns data", async () => {
+  it("200 + data when service returns movies", async () => {
     const data = [movieSeed1, movieSeed2];
-    jest.spyOn(serviceMod, "getSearchMovies").mockResolvedValue(data);
+    (getSearchMovies as jest.Mock).mockResolvedValue(data);
     const { req, res } = createMocks({
       method: "GET",
       query: { query: movieSeed2.title },
     });
-
     await getSearchResults(req, res);
-    expect(serviceMod.getSearchMovies).toHaveBeenCalledWith(movieSeed2.title);
+
+    expect(getSearchMovies).toHaveBeenCalledWith(movieSeed2.title);
     expect(res._getStatusCode()).toBe(200);
     expect(res._getJSONData()).toEqual(data);
   });
 
-  it("uses handleApiError on service throw", async () => {
-    const err = new Error("fail");
-    jest.spyOn(serviceMod, "getSearchMovies").mockRejectedValue(err);
+  it("500 via handleApiError if service throws", async () => {
+    const err = new Error("boom");
+    (getSearchMovies as jest.Mock).mockRejectedValue(err);
     const { req, res } = createMocks({
       method: "GET",
       query: { query: movieSeed1.title },
     });
-
     await getSearchResults(req, res);
+
     expect(handleApiError).toHaveBeenCalledWith(
       res,
       "Error fetching movies",
