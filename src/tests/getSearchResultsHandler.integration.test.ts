@@ -37,7 +37,7 @@ beforeAll(async () => {
   // 3) Connect via your real dbConnect()
   await dbConnect();
 
-  // 5) Dynamically import your handler & its mocks
+  // 4) Dynamically import your handler & its mocks
   const routeMod = await import("@/pages/api/movies/search");
   getSearchResults = routeMod.default;
 
