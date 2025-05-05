@@ -78,4 +78,23 @@ describe("moviesOfTheDayHandler – Unit Tests", () => {
     expect(res._getStatusCode()).toBe(500);
     expect(res._getJSONData()).toEqual({ error: "Internal Server Error" });
   });
+
+  it("returns 200 and wraps postMovies output on PUT", async () => {
+    const inMovies = [movieSeed1];
+    const updatedMovies = [movieSeed2];
+    (postMovies as jest.Mock).mockResolvedValue(updatedMovies);
+
+    const { req, res } = createMocks<NextApiRequest, NextApiResponse>({
+      method: "PUT",
+      body: { movies: inMovies },
+    });
+    await moviesDayHandler(req, res);
+
+    expect(postMovies).toHaveBeenCalledWith(inMovies);
+    expect(res._getStatusCode()).toBe(200);
+    expect(res._getJSONData()).toEqual({
+      message: "Movies updated successfully",
+      data: updatedMovies,
+    });
+  });
 });
