@@ -1,5 +1,5 @@
 import axios from "axios";
-import movieThumbnail from "/public/movieThumbnail.png";
+import movieThumbnail from "/movieThumbnail.png";
 import { imgImdbUrl } from "@/lib/constants/constants";
 import { IMovie } from "@/db/models/Movie";
 

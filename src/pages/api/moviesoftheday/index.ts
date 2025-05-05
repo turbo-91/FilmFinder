@@ -30,7 +30,7 @@ export default async function moviesDayHandler(req, res) {
           .status(400)
           .json({ error: "Invalid request. Expecting an array of movies." });
       }
-      const updatedMovies = await addImgImdb(req.body.movies as IMovie);
+      const updatedMovies = await postMovies(req.body.movies as IMovie[]);
       return res
         .status(200)
         .json({ message: "Movies updated successfully", data: updatedMovies });
