@@ -15,11 +15,12 @@ let handleApiError: jest.Mock;
 let mongoServer: MongoMemoryServer;
 
 beforeAll(async () => {
+  // GIVEN an in-memory MongoDB instance is started
   mongoServer = await MongoMemoryServer.create();
   process.env.MONGODB_URI = mongoServer.getUri();
   await mongoose.connect(process.env.MONGODB_URI!, { dbName: "testdb" });
 
-  // Dynamically import after MONGODB_URI is set
+  // AND the handler and error mock are dynamically imported
   const routeMod = await import("@/pages/api/movies/[id]");
   movieByIdHandler = routeMod.default;
 
@@ -28,15 +29,12 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
+  // Cleanup database connections and in-memory server
   await mongoose.disconnect();
   await mongoServer.stop();
-
-  // Close native driver from dbConnect()
   const { clientPromise } = await import("@/db/mongodb");
   const client = await clientPromise;
   await client.close();
-
-  // Give any lingering handles a tick
   await new Promise((r) => setTimeout(r, 50));
 });
 
@@ -48,15 +46,18 @@ describe("movieByIdHandler — Integration Tests", () => {
   });
 
   it("returns 200 and the movie from DB", async () => {
+    // GIVEN one movie is seeded
     const { default: MovieModel } = await import("@/db/models/Movie");
     const seeded = await MovieModel.create(movieSeed1);
 
+    // WHEN the handler is invoked with that ID
     const { req, res } = createMocks({
       method: "GET",
       query: { id: seeded._id.toString() },
     });
     await movieByIdHandler(req as any, res as any);
 
+    // THEN it responds with 200 and the seeded movie data
     expect(res._getStatusCode()).toBe(200);
     expect(res._getJSONData()).toMatchObject({
       _id: seeded._id,
@@ -64,49 +65,58 @@ describe("movieByIdHandler — Integration Tests", () => {
     });
   });
 
-  it("returns 404 for non-existent ID", async () => {
+  it("GIVEN no movie exists for the ID WHEN requested THEN returns 404", async () => {
+    // WHEN the handler is invoked with a non-existent ID
     const { req, res } = createMocks({
       method: "GET",
       query: { id: "9999" },
     });
     await movieByIdHandler(req as any, res as any);
 
+    // THEN it responds with 404 and the correct status message
     expect(res._getStatusCode()).toBe(404);
     expect(res._getJSONData()).toEqual({ status: "Movie Not Found" });
   });
 
-  it("returns 400 when ID param is invalid", async () => {
+  it("GIVEN an invalid ID parameter WHEN requested THEN returns 400", async () => {
+    // WHEN the handler is invoked with a non-string ID
     const { req, res } = createMocks({
       method: "GET",
       query: { id: ["bad"] },
     });
     await movieByIdHandler(req as any, res as any);
 
+    // THEN it responds with 400 and the validation error
     expect(res._getStatusCode()).toBe(400);
     expect(res._getJSONData()).toEqual({ error: "Movie ID is required" });
   });
 
-  it("returns 405 for unsupported methods", async () => {
+  it("GIVEN an unsupported HTTP method WHEN invoked THEN returns 405", async () => {
+    // WHEN the handler is invoked with POST
     const { req, res } = createMocks({
       method: "POST",
       query: { id: "100" },
     });
     await movieByIdHandler(req as any, res as any);
 
+    // THEN it responds with 405 and the method-not-allowed status
     expect(res._getStatusCode()).toBe(405);
     expect(res._getJSONData()).toEqual({ status: "Method Not Allowed" });
   });
 
-  it("uses handleApiError on unexpected errors", async () => {
+  it("GIVEN the service throws an error WHEN requested THEN delegates to handleApiError", async () => {
+    // GIVEN the underlying service will reject
     const serviceMod = await import("@/services/movieDB");
     jest.spyOn(serviceMod, "getMovieById").mockRejectedValue(new Error("fail"));
 
+    // WHEN the handler is invoked
     const { req, res } = createMocks({
       method: "GET",
       query: { id: "100" },
     });
     await movieByIdHandler(req as any, res as any);
 
+    // THEN handleApiError is called and a 500 is returned
     expect(handleApiError).toHaveBeenCalledWith(
       res,
       "Error fetching movie by ID",

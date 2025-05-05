@@ -3,7 +3,9 @@ import movieByIdHandler from "@/pages/api/movies/[id]";
 import { getMovieById } from "@/services/movieDB";
 import handleApiError from "@/lib/handleApiError";
 import { movieSeed1 } from "../../movieSeeds";
+import type { NextApiRequest, NextApiResponse } from "next";
 
+// Mock external dependencies
 jest.mock("@/services/movieDB", () => ({
   getMovieById: jest.fn(),
 }));
@@ -16,68 +18,98 @@ describe("movieByIdHandler – Unit Tests", () => {
     jest.clearAllMocks();
   });
 
-  it("returns 405 on non-GET methods", async () => {
-    const { req, res } = createMocks({ method: "POST", query: { id: "1" } });
+  it("GIVEN a non-GET method WHEN called THEN returns 405", async () => {
+    // GIVEN
+    const { req, res } = createMocks<NextApiRequest, NextApiResponse>({
+      method: "POST",
+      query: { id: "1" },
+    });
+
+    // WHEN
     await movieByIdHandler(req as any, res as any);
+
+    // THEN
     expect(res._getStatusCode()).toBe(405);
     expect(res._getJSONData()).toEqual({ status: "Method Not Allowed" });
   });
 
-  it("returns 400 if id is missing", async () => {
-    const { req, res } = createMocks({ method: "GET", query: {} });
-    await movieByIdHandler(req as any, res as any);
-    expect(res._getStatusCode()).toBe(400);
-    expect(res._getJSONData()).toEqual({ error: "Movie ID is required" });
-  });
-
-  it("returns 400 if id is not a string", async () => {
-    const { req, res } = createMocks({
+  it("GIVEN missing id param WHEN GET called THEN returns 400", async () => {
+    // GIVEN
+    const { req, res } = createMocks<NextApiRequest, NextApiResponse>({
       method: "GET",
-      query: { id: ["not-a-string"] },
+      query: {},
     });
+
+    // WHEN
     await movieByIdHandler(req as any, res as any);
+
+    // THEN
     expect(res._getStatusCode()).toBe(400);
     expect(res._getJSONData()).toEqual({ error: "Movie ID is required" });
   });
 
-  it("returns 200 and movie when found", async () => {
-    (getMovieById as jest.Mock).mockResolvedValue(movieSeed1);
+  it("GIVEN id param is not a string WHEN GET called THEN returns 400", async () => {
+    // GIVEN
+    const { req, res } = createMocks<NextApiRequest, NextApiResponse>({
+      method: "GET",
+      query: { id: [123] } as any,
+    });
 
-    const { req, res } = createMocks({
+    // WHEN
+    await movieByIdHandler(req as any, res as any);
+
+    // THEN
+    expect(res._getStatusCode()).toBe(400);
+    expect(res._getJSONData()).toEqual({ error: "Movie ID is required" });
+  });
+
+  it("GIVEN a valid id and movie exists WHEN GET called THEN returns 200 with movie", async () => {
+    // GIVEN
+    (getMovieById as jest.Mock).mockResolvedValue(movieSeed1);
+    const { req, res } = createMocks<NextApiRequest, NextApiResponse>({
       method: "GET",
       query: { id: movieSeed1._id.toString() },
     });
+
+    // WHEN
     await movieByIdHandler(req as any, res as any);
 
+    // THEN
     expect(getMovieById).toHaveBeenCalledWith(movieSeed1._id.toString());
     expect(res._getStatusCode()).toBe(200);
     expect(res._getJSONData()).toEqual(movieSeed1);
   });
 
-  it("returns 404 if movie not found", async () => {
+  it("GIVEN a valid id but movie missing WHEN GET called THEN returns 404", async () => {
+    // GIVEN
     (getMovieById as jest.Mock).mockResolvedValue(null);
-
-    const { req, res } = createMocks({
+    const { req, res } = createMocks<NextApiRequest, NextApiResponse>({
       method: "GET",
       query: { id: "42" },
     });
+
+    // WHEN
     await movieByIdHandler(req as any, res as any);
 
+    // THEN
     expect(getMovieById).toHaveBeenCalledWith("42");
     expect(res._getStatusCode()).toBe(404);
     expect(res._getJSONData()).toEqual({ status: "Movie Not Found" });
   });
 
-  it("delegates to handleApiError on service throw", async () => {
+  it("GIVEN service error WHEN GET called THEN delegates to handleApiError", async () => {
+    // GIVEN
     const error = new Error("DB fail");
     (getMovieById as jest.Mock).mockRejectedValue(error);
-
-    const { req, res } = createMocks({
+    const { req, res } = createMocks<NextApiRequest, NextApiResponse>({
       method: "GET",
       query: { id: movieSeed1._id.toString() },
     });
+
+    // WHEN
     await movieByIdHandler(req as any, res as any);
 
+    // THEN
     expect(getMovieById).toHaveBeenCalledWith(movieSeed1._id.toString());
     expect(handleApiError).toHaveBeenCalledWith(
       res,

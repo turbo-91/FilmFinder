@@ -1,114 +1,94 @@
 import moviesHandler from "@/pages/api/movies";
 import { createMocks } from "node-mocks-http";
 import Movie from "@/db/models/Movie";
+import { movieSeed1, movieSeed2 } from "@/tests/movieSeeds";
 
 jest.mock("@/db/mongodb", () => jest.fn()); // Mock database connection
 jest.mock("@/db/models/Movie"); // Mock Mongoose Model
 
-describe("Movies API - Unit Tests", () => {
+describe("Movies API – Unit Tests", () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
-  // getAll tests
+  test("405 Method Not Allowed for unsupported methods", async () => {
+    // GIVEN a PUT request to the movies endpoint
+    const { req, res } = createMocks({ method: "PUT" });
 
-  test("should return 405 Method Not Allowed for unsupported methods", async () => {
-    const { req, res } = createMocks({ method: "PUT" }); // Unsupported method
-
+    // WHEN the handler is invoked
     await moviesHandler(req, res);
 
+    // THEN it should respond 405 with Method Not Allowed
     expect(res._getStatusCode()).toBe(405);
     expect(res._getJSONData()).toEqual({ status: "Method Not Allowed" });
   });
 
-  test("should call Movie.find() with the correct parameters when filtering by query", async () => {
+  test("getAllMovies → 200 when filtering by query", async () => {
     const mockMovies = [{ title: "Movie A" }];
     (Movie.find as jest.Mock).mockResolvedValue(mockMovies);
 
+    // GIVEN a GET request with query='action'
     const { req, res } = createMocks({
       method: "GET",
       query: { query: "action" },
     });
 
+    // WHEN the handler is invoked
     await moviesHandler(req, res);
 
-    expect(Movie.find).toHaveBeenCalledWith({ queries: "action" }); // Ensure correct query
+    // THEN it should call Movie.find with the correct filter and return the movies
+    expect(Movie.find).toHaveBeenCalledWith({ queries: "action" });
     expect(res._getStatusCode()).toBe(200);
     expect(res._getJSONData()).toEqual(mockMovies);
   });
 
-  test("should return 404 if no movies found", async () => {
+  test("getAllMovies → 404 when no movies found", async () => {
     (Movie.find as jest.Mock).mockResolvedValue([]);
 
+    // GIVEN a GET request with no query
     const { req, res } = createMocks({ method: "GET" });
 
+    // WHEN the handler is invoked
     await moviesHandler(req, res);
 
+    // THEN it should return 404 Not Found
     expect(Movie.find).toHaveBeenCalled();
     expect(res._getStatusCode()).toBe(404);
     expect(res._getJSONData()).toEqual({ status: "Not Found" });
   });
 
-  // getBySlug tests
-
-  test("should call Movie.find() with the correct parameters when searching by slug", async () => {
-    const mockMovie = [
-      {
-        slug: "movie-1",
-        title: "Movie 1",
-      },
-    ];
-
+  test("getMovieBySlug → 200 when slug matches", async () => {
+    const mockMovie = [{ slug: "movie-1", title: "Movie 1" }];
     (Movie.find as jest.Mock).mockResolvedValue(mockMovie);
 
+    // GIVEN a GET request with slug='movie-1'
     const { req, res } = createMocks({
       method: "GET",
       query: { slug: "movie-1" },
     });
 
+    // WHEN the handler is invoked
     await moviesHandler(req, res);
 
-    expect(Movie.find).toHaveBeenCalledTimes(1);
-    expect(Movie.find).toHaveBeenCalledWith({ slug: "movie-1" }); // ✅ Now ensures correct slug
-  });
-
-  test("should return 405 Method Not Allowed for unsupported methods", async () => {
-    const { req, res } = createMocks({ method: "PUT" }); // Unsupported method
-
-    await moviesHandler(req, res);
-
-    expect(res._getStatusCode()).toBe(405);
-    expect(res._getJSONData()).toEqual({ status: "Method Not Allowed" });
-  });
-
-  // getMovieBySlug tests
-
-  test("should call Movie.find() with the correct query parameter", async () => {
-    const mockMovies = [{ title: "Movie A", queries: ["action"] }];
-    (Movie.find as jest.Mock).mockResolvedValue(mockMovies);
-
-    const { req, res } = createMocks({
-      method: "GET",
-      query: { query: "action" }, // Simulating a search by query
-    });
-
-    await moviesHandler(req, res);
-
-    expect(Movie.find).toHaveBeenCalledWith({ queries: "action" }); // ✅ Ensure correct query parameter
+    // THEN it should call Movie.find with the correct slug and return that movie
+    expect(Movie.find).toHaveBeenCalledWith({ slug: "movie-1" });
     expect(res._getStatusCode()).toBe(200);
-    expect(res._getJSONData()).toEqual(mockMovies);
+    expect(res._getJSONData()).toEqual(mockMovie);
   });
 
-  test("should return 404 if no movies match the query", async () => {
-    (Movie.find as jest.Mock).mockResolvedValue([]); // Simulating no results found
+  test("filterByQuery → 404 when query matches none", async () => {
+    (Movie.find as jest.Mock).mockResolvedValue([]);
 
+    // GIVEN a GET request with query='nonexistent'
     const { req, res } = createMocks({
       method: "GET",
       query: { query: "nonexistent" },
     });
 
+    // WHEN the handler is invoked
     await moviesHandler(req, res);
 
+    // THEN it should return 404 and the appropriate message
     expect(Movie.find).toHaveBeenCalledWith({ queries: "nonexistent" });
     expect(res._getStatusCode()).toBe(404);
     expect(res._getJSONData()).toEqual({
@@ -116,51 +96,38 @@ describe("Movies API - Unit Tests", () => {
     });
   });
 
-  test("should return 500 if database error occurs", async () => {
-    (Movie.find as jest.Mock).mockRejectedValue(new Error("Database error")); // Simulating database failure
+  test("500 if Movie.find throws an error", async () => {
+    (Movie.find as jest.Mock).mockRejectedValue(new Error("DB error"));
 
+    // GIVEN a GET request with query='action'
     const { req, res } = createMocks({
       method: "GET",
       query: { query: "action" },
     });
 
+    // WHEN the handler is invoked
     await moviesHandler(req, res);
 
+    // THEN it should respond 500 and include an error property
     expect(Movie.find).toHaveBeenCalledWith({ queries: "action" });
     expect(res._getStatusCode()).toBe(500);
-
-    // ✅ Expect whatever error message the API actually returns
-    const responseData = res._getJSONData();
-    expect(responseData).toHaveProperty("error");
+    expect(res._getJSONData()).toHaveProperty("error");
   });
 
-  // createMovie and createMovies tests
-
-  test("should create a single movie successfully", async () => {
-    const movieData = {
-      netzkinoId: 1,
-      slug: "movie-1",
-      title: "Movie 1",
-      year: "2022",
-      overview: "This is movie 1",
-      regisseur: "Director 1",
-      stars: "Star 1, Star 2",
-      imgNetzkino: "image1.jpg",
-      imgNetzkinoSmall: "image1-small.jpg",
-      imgImdb: "imdb1.jpg",
-      queries: ["action"],
-      dateFetched: "2024-02-11",
-    };
-
+  test("createMovie → 201 and returns created movie", async () => {
+    const movieData = movieSeed1;
     (Movie.create as jest.Mock).mockResolvedValue(movieData);
 
+    // GIVEN a POST request with a valid movie body
     const { req, res } = createMocks({
       method: "POST",
       body: movieData,
     });
 
+    // WHEN the handler is invoked
     await moviesHandler(req, res);
 
+    // THEN it should create the movie and return 201 with the movie data
     expect(Movie.create).toHaveBeenCalledWith(movieData);
     expect(res._getStatusCode()).toBe(201);
     expect(res._getJSONData()).toEqual({
@@ -170,47 +137,20 @@ describe("Movies API - Unit Tests", () => {
     });
   });
 
-  test("should create multiple movies successfully", async () => {
-    const moviesData = [
-      {
-        netzkinoId: 2,
-        slug: "movie-2",
-        title: "Movie 2",
-        year: "2023",
-        overview: "This is movie 2",
-        regisseur: "Director 2",
-        stars: "Star A, Star B",
-        imgNetzkino: "image2.jpg",
-        imgNetzkinoSmall: "image2-small.jpg",
-        imgImdb: "imdb2.jpg",
-        queries: ["drama"],
-        dateFetched: "2024-02-11",
-      },
-      {
-        netzkinoId: 3,
-        slug: "movie-3",
-        title: "Movie 3",
-        year: "2024",
-        overview: "This is movie 3",
-        regisseur: "Director 3",
-        stars: "Star X, Star Y",
-        imgNetzkino: "image3.jpg",
-        imgNetzkinoSmall: "image3-small.jpg",
-        imgImdb: "imdb3.jpg",
-        queries: ["thriller"],
-        dateFetched: "2024-02-11",
-      },
-    ];
-
+  test("createMovies → 201 and returns created movies", async () => {
+    const moviesData = [movieSeed1, movieSeed2];
     (Movie.insertMany as jest.Mock).mockResolvedValue(moviesData);
 
+    // GIVEN a POST request with an array of movies
     const { req, res } = createMocks({
       method: "POST",
       body: moviesData,
     });
 
+    // WHEN the handler is invoked
     await moviesHandler(req, res);
 
+    // THEN it should insert all movies and return 201 with the array
     expect(Movie.insertMany).toHaveBeenCalledWith(moviesData);
     expect(res._getStatusCode()).toBe(201);
     expect(res._getJSONData()).toEqual({
@@ -220,45 +160,44 @@ describe("Movies API - Unit Tests", () => {
     });
   });
 
-  test("should return 400 if required fields are missing for a single movie", async () => {
-    const incompleteMovieData = {
-      title: "Incomplete Movie", // Missing required fields
-    };
-
+  test("createMovie → 400 on missing required fields (single)", async () => {
+    const incomplete = { title: "Bad" };
     (Movie.create as jest.Mock).mockRejectedValue(
       new Error("Movie validation failed: Missing required fields")
     );
 
+    // GIVEN a POST request with incomplete body
     const { req, res } = createMocks({
       method: "POST",
-      body: incompleteMovieData,
+      body: incomplete,
     });
 
+    // WHEN the handler is invoked
     await moviesHandler(req, res);
 
-    expect(Movie.create).toHaveBeenCalledWith(incompleteMovieData);
+    // THEN it should respond 400 with a missing-fields error
+    expect(Movie.create).toHaveBeenCalledWith(incomplete);
     expect(res._getStatusCode()).toBe(400);
     expect(res._getJSONData()).toEqual({ error: "Missing required fields" });
   });
 
-  test("should return 400 if required fields are missing for multiple movies", async () => {
-    const incompleteMoviesData = [
-      { title: "Movie Without Required Fields" },
-      { title: "Another Incomplete Movie" },
-    ];
-
+  test("createMovies → 400 on missing required fields (multiple)", async () => {
+    const incompletes = [{ title: "A" }, { title: "B" }];
     (Movie.insertMany as jest.Mock).mockRejectedValue(
       new Error("Movie validation failed: Missing required fields")
     );
 
+    // GIVEN a POST request with an array of incomplete bodies
     const { req, res } = createMocks({
       method: "POST",
-      body: incompleteMoviesData,
+      body: incompletes,
     });
 
+    // WHEN the handler is invoked
     await moviesHandler(req, res);
 
-    expect(Movie.insertMany).toHaveBeenCalledWith(incompleteMoviesData);
+    // THEN it should respond 400 with a missing-fields error
+    expect(Movie.insertMany).toHaveBeenCalledWith(incompletes);
     expect(res._getStatusCode()).toBe(400);
     expect(res._getJSONData()).toEqual({ error: "Missing required fields" });
   });
