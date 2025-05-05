@@ -67,4 +67,15 @@ describe("moviesOfTheDayHandler – Unit Tests", () => {
       error: "Invalid request. Expecting an array of movies.",
     });
   });
+
+  it("POST → 500 when postMovies throws", async () => {
+    (postMovies as jest.Mock).mockRejectedValue(new Error("db fail"));
+    const { req, res } = createMocks<NextApiRequest, NextApiResponse>({
+      method: "POST",
+      body: { movies: [movieSeed1] },
+    });
+    await moviesDayHandler(req, res);
+    expect(res._getStatusCode()).toBe(500);
+    expect(res._getJSONData()).toEqual({ error: "Internal Server Error" });
+  });
 });
