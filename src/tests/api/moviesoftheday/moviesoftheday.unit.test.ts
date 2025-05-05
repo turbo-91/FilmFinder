@@ -28,4 +28,13 @@ describe("moviesOfTheDayHandler – Unit Tests", () => {
     expect(res._getStatusCode()).toBe(200);
     expect(res._getJSONData()).toEqual(mockData);
   });
+
+  it("500 when getMoviesOfTheDay throws", async () => {
+    (getMoviesOfTheDay as jest.Mock).mockRejectedValue(new Error("oops"));
+    const { req, res } = createMocks({ method: "GET" });
+    await moviesDayHandler(req, res);
+    expect(getMoviesOfTheDay).toHaveBeenCalled();
+    expect(res._getStatusCode()).toBe(500);
+    expect(res._getJSONData()).toEqual({ error: "Internal Server Error" });
+  });
 });
