@@ -1,7 +1,6 @@
 import dbConnect from "@/db/mongodb";
 import { randomQueries } from "@/lib/constants/constants";
 import { getMoviesOfTheDay } from "@/services/movieService";
-import { addImgImdb } from "@/services/imdbService";
 import { postMovies } from "@/services/movieDB";
 import { IMovie } from "@/db/models/Movie";
 

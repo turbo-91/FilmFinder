@@ -2,7 +2,7 @@ import axios from "axios";
 import { netzkinoURL, netzkinoKey } from "@/lib/constants/constants";
 import { IMovie } from "@/db/models/Movie";
 import { postQuery } from "./queryService";
-import movieThumbnail from "/public/movieThumbnail.png";
+const movieThumbnail = require("@/public/movieThumbnail.png");
 import { NetzkinoMovie } from "@/types/NetzkinoMovie";
 import getApiLink from "@/lib/getApiLink";
 import starSanitizer from "@/lib/starSanitizer";
