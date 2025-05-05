@@ -55,4 +55,16 @@ describe("moviesOfTheDayHandler – Unit Tests", () => {
     expect(res._getStatusCode()).toBe(201);
     expect(res._getJSONData()).toEqual(outMovies);
   });
+
+  it("POST → 400 when body.movies is missing or not an array", async () => {
+    const { req, res } = createMocks<NextApiRequest, NextApiResponse>({
+      method: "POST",
+      body: { foo: "bar" },
+    });
+    await moviesDayHandler(req, res);
+    expect(res._getStatusCode()).toBe(400);
+    expect(res._getJSONData()).toEqual({
+      error: "Invalid request. Expecting an array of movies.",
+    });
+  });
 });
