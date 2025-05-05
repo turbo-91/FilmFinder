@@ -6,6 +6,7 @@ import { randomQueries } from "@/lib/constants/constants";
 import moviesDayHandler from "@/pages/api/moviesoftheday";
 import { postMovies } from "@/services/movieDB";
 
+// MOCKS
 jest.mock("@/db/mongodb", () => ({
   __esModule: true,
   default: jest.fn().mockResolvedValue(null),
@@ -19,28 +20,43 @@ describe("moviesOfTheDayHandler – Unit Tests", () => {
     jest.clearAllMocks();
   });
 
-  it("returns 200 with movies when service returns data", async () => {
+  it("GET → 200 with movies when service returns data", async () => {
+    // GIVEN getMoviesOfTheDay will resolve with two movies
     const mockData = [movieSeed1, movieSeed2];
     (getMoviesOfTheDay as jest.Mock).mockResolvedValue(mockData);
+
     const { req, res } = createMocks<NextApiRequest, NextApiResponse>({
       method: "GET",
     });
+
+    // WHEN the handler is invoked
     await moviesDayHandler(req, res);
+
+    // THEN service is called with randomQueries and response is 200 with the returned array
     expect(getMoviesOfTheDay).toHaveBeenCalledWith(randomQueries);
     expect(res._getStatusCode()).toBe(200);
     expect(res._getJSONData()).toEqual(mockData);
   });
 
-  it("500 when getMoviesOfTheDay throws", async () => {
+  it("GET → 500 when getMoviesOfTheDay throws", async () => {
+    // GIVEN getMoviesOfTheDay will reject
     (getMoviesOfTheDay as jest.Mock).mockRejectedValue(new Error("oops"));
-    const { req, res } = createMocks({ method: "GET" });
+
+    const { req, res } = createMocks<NextApiRequest, NextApiResponse>({
+      method: "GET",
+    });
+
+    // WHEN the handler is invoked
     await moviesDayHandler(req, res);
+
+    // THEN response is 500 with generic error message
     expect(getMoviesOfTheDay).toHaveBeenCalled();
     expect(res._getStatusCode()).toBe(500);
     expect(res._getJSONData()).toEqual({ error: "Internal Server Error" });
   });
 
-  it("should POST and return 201 when body.movies is a valid array", async () => {
+  it("POST → 201 when body.movies is valid array", async () => {
+    // GIVEN postMovies will resolve with an array of new movies
     const inMovies = [movieSeed1];
     const outMovies = [movieSeed2];
     (postMovies as jest.Mock).mockResolvedValue(outMovies);
@@ -49,19 +65,27 @@ describe("moviesOfTheDayHandler – Unit Tests", () => {
       method: "POST",
       body: { movies: inMovies },
     });
+
+    // WHEN the handler is invoked
     await moviesDayHandler(req, res);
 
+    // THEN postMovies is called with input and response is 201 with its return value
     expect(postMovies).toHaveBeenCalledWith(inMovies);
     expect(res._getStatusCode()).toBe(201);
     expect(res._getJSONData()).toEqual(outMovies);
   });
 
-  it("POST → 400 when body.movies is missing or not an array", async () => {
+  it("POST → 400 when body.movies missing or not array", async () => {
+    // GIVEN a POST without movies array
     const { req, res } = createMocks<NextApiRequest, NextApiResponse>({
       method: "POST",
       body: { foo: "bar" },
     });
+
+    // WHEN the handler is invoked
     await moviesDayHandler(req, res);
+
+    // THEN response is 400 with validation error
     expect(res._getStatusCode()).toBe(400);
     expect(res._getJSONData()).toEqual({
       error: "Invalid request. Expecting an array of movies.",
@@ -69,17 +93,24 @@ describe("moviesOfTheDayHandler – Unit Tests", () => {
   });
 
   it("POST → 500 when postMovies throws", async () => {
+    // GIVEN postMovies will reject
     (postMovies as jest.Mock).mockRejectedValue(new Error("db fail"));
+
     const { req, res } = createMocks<NextApiRequest, NextApiResponse>({
       method: "POST",
       body: { movies: [movieSeed1] },
     });
+
+    // WHEN the handler is invoked
     await moviesDayHandler(req, res);
+
+    // THEN response is 500 with generic error
     expect(res._getStatusCode()).toBe(500);
     expect(res._getJSONData()).toEqual({ error: "Internal Server Error" });
   });
 
-  it("returns 200 and wraps postMovies output on PUT", async () => {
+  it("PUT → 200 wraps postMovies output when body.movies is valid array", async () => {
+    // GIVEN postMovies will resolve with updated movies
     const inMovies = [movieSeed1];
     const updatedMovies = [movieSeed2];
     (postMovies as jest.Mock).mockResolvedValue(updatedMovies);
@@ -88,8 +119,11 @@ describe("moviesOfTheDayHandler – Unit Tests", () => {
       method: "PUT",
       body: { movies: inMovies },
     });
+
+    // WHEN the handler is invoked
     await moviesDayHandler(req, res);
 
+    // THEN postMovies is called and response is 200 with message+data
     expect(postMovies).toHaveBeenCalledWith(inMovies);
     expect(res._getStatusCode()).toBe(200);
     expect(res._getJSONData()).toEqual({
@@ -98,25 +132,33 @@ describe("moviesOfTheDayHandler – Unit Tests", () => {
     });
   });
 
-  it("returns 400 when PUT body.movies is missing or not an array", async () => {
+  it("PUT → 400 when body.movies missing or not array", async () => {
+    // GIVEN a PUT without valid movies array
     const { req, res } = createMocks<NextApiRequest, NextApiResponse>({
       method: "PUT",
       body: { movies: "nope" },
     });
+
+    // WHEN the handler is invoked
     await moviesDayHandler(req, res);
 
+    // THEN response is 400 with validation error
     expect(res._getStatusCode()).toBe(400);
     expect(res._getJSONData()).toEqual({
       error: "Invalid request. Expecting an array of movies.",
     });
   });
 
-  it("returns 405 for any other HTTP method", async () => {
+  it("OTHER → 405 for any unsupported HTTP method", async () => {
+    // GIVEN a DELETE request
     const { req, res } = createMocks<NextApiRequest, NextApiResponse>({
       method: "DELETE",
     });
+
+    // WHEN the handler is invoked
     await moviesDayHandler(req, res);
 
+    // THEN response is 405 Method Not Allowed
     expect(res._getStatusCode()).toBe(405);
     expect(res._getJSONData()).toEqual({ error: "Method Not Allowed" });
   });
