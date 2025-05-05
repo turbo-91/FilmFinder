@@ -5,7 +5,7 @@ import { getMoviesByQuery } from "./movieDB";
 import { IMovie } from "@/db/models/Movie";
 import { fetchMoviesFromNetzkino } from "./netzkinoFetcher";
 import { postMovies } from "./movieDB";
-import { addImgImdb, enrichMovies } from "./imdbService";
+import { enrichMovies } from "./imdbService";
 import Bottleneck from "bottleneck";
 
 // I. Fetches movies of the day from Netzkino API, caches them in the database,
