@@ -3,7 +3,7 @@
 import { createMocks } from "node-mocks-http";
 import mongoose from "mongoose";
 import { MongoMemoryServer } from "mongodb-memory-server";
-import { movieSeed1, movieSeed2 } from "./movieSeeds";
+import { movieSeed1, movieSeed2 } from "../../movieSeeds";
 
 // Stub only the downstream service and error-handler
 jest.mock("@/services/movieService", () => ({

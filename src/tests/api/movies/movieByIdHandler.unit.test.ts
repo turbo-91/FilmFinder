@@ -2,7 +2,7 @@ import { createMocks } from "node-mocks-http";
 import movieByIdHandler from "@/pages/api/movies/[id]";
 import { getMovieById } from "@/services/movieDB";
 import handleApiError from "@/lib/handleApiError";
-import { movieSeed1 } from "./movieSeeds";
+import { movieSeed1 } from "../../movieSeeds";
 
 jest.mock("@/services/movieDB", () => ({
   getMovieById: jest.fn(),
