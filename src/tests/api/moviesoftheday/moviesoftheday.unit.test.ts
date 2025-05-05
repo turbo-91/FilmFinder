@@ -97,4 +97,17 @@ describe("moviesOfTheDayHandler – Unit Tests", () => {
       data: updatedMovies,
     });
   });
+
+  it("returns 400 when PUT body.movies is missing or not an array", async () => {
+    const { req, res } = createMocks<NextApiRequest, NextApiResponse>({
+      method: "PUT",
+      body: { movies: "nope" },
+    });
+    await moviesDayHandler(req, res);
+
+    expect(res._getStatusCode()).toBe(400);
+    expect(res._getJSONData()).toEqual({
+      error: "Invalid request. Expecting an array of movies.",
+    });
+  });
 });
