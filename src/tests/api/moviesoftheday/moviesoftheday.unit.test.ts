@@ -110,4 +110,14 @@ describe("moviesOfTheDayHandler – Unit Tests", () => {
       error: "Invalid request. Expecting an array of movies.",
     });
   });
+
+  it("returns 405 for any other HTTP method", async () => {
+    const { req, res } = createMocks<NextApiRequest, NextApiResponse>({
+      method: "DELETE",
+    });
+    await moviesDayHandler(req, res);
+
+    expect(res._getStatusCode()).toBe(405);
+    expect(res._getJSONData()).toEqual({ error: "Method Not Allowed" });
+  });
 });
