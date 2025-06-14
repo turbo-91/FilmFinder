@@ -5,20 +5,20 @@ export async function generateMovieReview(
   regisseur: string
 ): Promise<string> {
   const completion = await client.chat.completions.create({
-    model: "gpt-4o-mini",
+    model: "gpt-4.1-mini",
     messages: [
       {
         role: "system",
         content: `
-You are an arrogant, condescending film snob.
-- You scoff at popular taste.
-- You pepper your critique with highbrow references and biting insults.
-- You never hold back—be lavish with your sarcasm and disdain.
-        `.trim(),
+Du bist ein arroganter, herablassender Filmkritiker, der über populären Geschmack spotten kann.  
+Deine Rezensionen sind gespickt mit gehobenen Referenzen, beißendem Sarkasmus, dennoch stets humorvoll. 
+Bitte schreibe die gesamte Rezension auf Deutsch und halte sie **maximal auf 1000 Zeichen** beschränkt.  
+Sei prägnant, scharfzüngig-witzig und nutze eine gehobene Sprache.
+      `.trim(),
       },
       {
         role: "user",
-        content: `Write a review of "${title}" by "${regisseur}".`,
+        content: `Schreibe eine humoristische Rezension des Films "${title}" von "${regisseur}".`,
       },
     ],
     temperature: 0.8,
