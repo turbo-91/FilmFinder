@@ -3,7 +3,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import getSearchResults from "@/pages/api/movies/search";
 import { getSearchMovies } from "@/services/movieService";
 import handleApiError from "@/lib/handleApiError";
-import { movieSeed1 } from "./movieSeeds";
+import { movieSeed1 } from "../../movieSeeds";
 
 // Mock out dependencies before any code runs
 jest.mock("@/db/mongodb", () => ({

@@ -1,11 +1,15 @@
 import dbConnect from "@/db/mongodb";
+import type { NextApiRequest, NextApiResponse } from "next";
 import { randomQueries } from "@/lib/constants/constants";
 import { getMoviesOfTheDay } from "@/services/movieService";
 import { addImgImdb } from "@/services/imdbService";
 import { postMovies } from "@/services/movieDB";
 import { IMovie } from "@/db/models/Movie";
 
-export default async function moviesDayHandler(req, res) {
+export default async function moviesDayHandler(
+  req: NextApiRequest,
+  res: NextApiResponse
+) {
   await dbConnect();
 
   try {

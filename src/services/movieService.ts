@@ -5,10 +5,10 @@ import { getMoviesByQuery } from "./movieDB";
 import { IMovie } from "@/db/models/Movie";
 import { fetchMoviesFromNetzkino } from "./netzkinoFetcher";
 import { postMovies } from "./movieDB";
-import { addImgImdb, enrichMovies } from "./imdbService";
+import { enrichMovies } from "./imdbService";
 import Bottleneck from "bottleneck";
 
-// I. Fetches movies of the day from Netzkino API, caches them in the database,
+// I. Fetches movies of the day from Netzkino API, caches used queries and the movies in the database,
 // and fetches additional image from ImdB.
 
 export async function getMoviesOfTheDay(randomQueries: string[]) {
@@ -16,14 +16,13 @@ export async function getMoviesOfTheDay(randomQueries: string[]) {
 
   // Check if today's movies already exist in the database
   const today = new Date().toLocaleDateString();
-  const todaysMovies = await Movie.find({ dateFetched: today });
+  const todaysMovies = await Movie.find({ dateFetched: today }); // fix timezone!!
   if (todaysMovies.length > 0) {
     return todaysMovies.slice(0, 5); // Return only the top 5
   }
 
   // movies have not been fetched today: fetch movies from APIs
   const moviesOfTheDay: IMovie[] = [];
-  const usedQueries = [];
   const seenMovieIds = new Set<number>(); // Adjust type if necessary
   let attempts = 0;
   const maxAttempts = 10;
@@ -51,7 +50,6 @@ export async function getMoviesOfTheDay(randomQueries: string[]) {
   }
   await enrichMovies(moviesOfTheDay);
   postMovies(moviesOfTheDay);
-  console.log("MOVIES OF THE DAY", moviesOfTheDay);
 
   return moviesOfTheDay;
 }

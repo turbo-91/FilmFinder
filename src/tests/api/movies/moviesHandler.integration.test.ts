@@ -7,7 +7,7 @@ import {
   movieSeed3,
   newMovie,
   newMovies,
-} from "./movieSeeds";
+} from "@/tests/movieSeeds";
 
 jest.setTimeout(30000);
 
