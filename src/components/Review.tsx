@@ -1,6 +1,29 @@
 // pages/test-review.tsx
 import { useState, FormEvent } from "react";
 import { IMovie } from "@/db/models/Movie";
+import styled from "styled-components";
+
+const ReviewButton = styled.button`
+  all: unset;
+  cursor: pointer;
+  text-align: center;
+  height: 3vh;
+  margin: 0;
+  padding: 0 1rem;
+  font-size: clamp(0.4rem, 1vw, 0.9rem);
+  border: 1px solid white;
+  border-radius: 10px;
+  background-color: white;
+  color: black;
+  box-shadow: none;
+`;
+
+const Review = styled.p`
+  font-size: clamp(0.4rem, 1vw, 0.9rem);
+  line-height: var(--line-height);
+  text-align: left;
+  padding: 0;
+`;
 
 interface ReviewTesterProps {
   movie: IMovie;
@@ -8,8 +31,8 @@ interface ReviewTesterProps {
 
 export default function ReviewTester(props: Readonly<ReviewTesterProps>) {
   const { movie } = props;
-  const [title, setTitle] = useState("");
-  const [regisseur, setRegisseur] = useState("");
+  const title = movie.title;
+  const regisseur = movie.regisseur;
   const [review, setReview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -39,35 +62,19 @@ export default function ReviewTester(props: Readonly<ReviewTesterProps>) {
 
   return (
     <div style={{ padding: 20, fontFamily: "sans-serif" }}>
-      <h1>🎬 Review API Tester</h1>
       <form
         onSubmit={handleSubmit}
         style={{ display: "grid", gap: 8, maxWidth: 400 }}
       >
-        <input
-          placeholder="Movie Title"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          required
-        />
-        <input
-          placeholder="Director"
-          value={regisseur}
-          onChange={(e) => setRegisseur(e.target.value)}
-          required
-        />
-        <button type="submit" disabled={loading}>
-          {loading ? "Thinking..." : "Get Review"}
-        </button>
+        <ReviewButton type="submit" disabled={loading}>
+          {loading
+            ? "Einen Moment Geduld, werter Filmenthusiast..."
+            : "Frag den distinguierten Filmkritiker nach seiner Meinung."}
+        </ReviewButton>
       </form>
 
       {error && <p style={{ color: "red" }}>Error: {error}</p>}
-      {review && (
-        <div style={{ marginTop: 20 }}>
-          <h2>Review:</h2>
-          <p>{review}</p>
-        </div>
-      )}
+      {review && <Review>{review}</Review>}
     </div>
   );
 }

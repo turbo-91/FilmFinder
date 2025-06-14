@@ -211,7 +211,7 @@ export default function MovieDetail({ movie, onBack }: MovieDetailProps) {
           <Info>Regie: {movie.regisseur}</Info>
           <Info>Mit {movie.stars}</Info>
           <ReviewTester movie={movie} />
-          <BackButton onClick={onBack}>← Zurück</BackButton>
+          <BackButton onClick={onBack}>Zurück</BackButton>
         </ContentContainer>
       </UnitContainer>
     </DetailContainer>
