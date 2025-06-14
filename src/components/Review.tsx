@@ -20,8 +20,16 @@ const ReviewButton = styled.button`
 const Review = styled.p`
   font-size: clamp(0.4rem, 1vw, 0.9rem);
   line-height: var(--line-height);
-  text-align: left;
+  text-align: justify;
   padding: 0;
+`;
+
+const Info = styled.p`
+  text-align: center;
+  text-decoration: underline;
+  margin: 0;
+  padding: 0.5rem 1rem;
+  font-size: clamp(0.4rem, 1vw, 0.9rem);
 `;
 
 interface ReviewTesterProps {
@@ -75,7 +83,12 @@ export default function ReviewTester(props: Readonly<ReviewTesterProps>) {
 
       {error && <p style={{ color: "red" }}>Error: {error}</p>}
 
-      {review && <Review>"{review}"</Review>}
+      {review && (
+        <>
+          <Info>Unser Filmkritiker meint:</Info>
+          <Review>&quot;{review}&quot;</Review>
+        </>
+      )}
     </div>
   );
 }
