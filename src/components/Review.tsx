@@ -1,4 +1,3 @@
-// pages/test-review.tsx
 import { useState, FormEvent } from "react";
 import { IMovie } from "@/db/models/Movie";
 import styled from "styled-components";
@@ -33,15 +32,16 @@ export default function ReviewTester(props: Readonly<ReviewTesterProps>) {
   const { movie } = props;
   const title = movie.title;
   const regisseur = movie.regisseur;
+
   const [review, setReview] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError(null);
     setReview(null);
-    setLoading(true);
+    setIsLoading(true);
 
     try {
       const res = await fetch("/api/review", {
@@ -52,29 +52,30 @@ export default function ReviewTester(props: Readonly<ReviewTesterProps>) {
 
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Unknown error");
+
       setReview(data.review);
     } catch (err: any) {
       setError(err.message);
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
   return (
     <div style={{ padding: 20, fontFamily: "sans-serif" }}>
-      <form
-        onSubmit={handleSubmit}
-        style={{ display: "grid", gap: 8, maxWidth: 400 }}
-      >
-        <ReviewButton type="submit" disabled={loading}>
-          {loading
-            ? "Einen Moment Geduld, werter Filmenthusiast..."
-            : "Frag den distinguierten Filmkritiker nach seiner Meinung."}
-        </ReviewButton>
-      </form>
+      {!review && (
+        <form onSubmit={handleSubmit} style={{ maxWidth: 400 }}>
+          <ReviewButton type="submit" disabled={isLoading}>
+            {isLoading
+              ? "Einen Moment Geduld, werter Filmenthusiast..."
+              : "Frag den distinguierten Filmkritiker nach seiner Meinung."}
+          </ReviewButton>
+        </form>
+      )}
 
       {error && <p style={{ color: "red" }}>Error: {error}</p>}
-      {review && <Review>{review}</Review>}
+
+      {review && <Review>"{review}"</Review>}
     </div>
   );
 }
