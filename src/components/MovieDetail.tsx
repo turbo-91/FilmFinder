@@ -62,7 +62,7 @@ const BackButton = styled.button`
   all: unset;
   font-weight: var(--font-weight-light);
   cursor: pointer;
-  font-size: 1.8rem;
+  font-size: 1.5rem;
   margin: 0;
   margin-top: auto; /* pushes the button to the bottom */
   padding: 0.5rem 1rem;
@@ -73,7 +73,7 @@ const BackButton = styled.button`
 `;
 
 const Title = styled.h3`
-  font-size: 2.2rem;
+  font-size: 1.5rem;
   font-weight: var(--font-weight-light);
   text-align: left;
   margin: 0;
