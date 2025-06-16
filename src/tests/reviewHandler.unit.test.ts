@@ -59,4 +59,28 @@ describe("reviewHandler - unit tests", () => {
       /Failed to generate review: Service failure/
     );
   });
+
+  it("handles non-Error thrown by generateMovieReview", async () => {
+    mockedGenerateMovieReview.mockRejectedValue("string error");
+    const { req, res } = createMocks({
+      method: "POST",
+      body: { title: "T", regisseur: "R" },
+    });
+    await reviewHandler(req as NextApiRequest, res as NextApiResponse);
+    expect(res._getStatusCode()).toBe(500);
+    expect(JSON.parse(res._getData()).error).toBe(
+      "Failed to generate review: An unexpected error occurred"
+    );
+  });
+
+  it("returns 200 with empty review string", async () => {
+    mockedGenerateMovieReview.mockResolvedValue("");
+    const { req, res } = createMocks({
+      method: "POST",
+      body: { title: "T", regisseur: "R" },
+    });
+    await reviewHandler(req as NextApiRequest, res as NextApiResponse);
+    expect(res._getStatusCode()).toBe(200);
+    expect(JSON.parse(res._getData())).toEqual({ review: "" });
+  });
 });
