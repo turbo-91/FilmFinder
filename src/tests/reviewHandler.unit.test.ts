@@ -1,6 +1,7 @@
 import { createMocks } from "node-mocks-http";
 import reviewHandler from "@/pages/api/review";
 import { generateMovieReview } from "@/services/reviewService";
+import { NextApiRequest, NextApiResponse } from "next";
 
 jest.mock("@/services/reviewService");
 const mockedGenerateMovieReview = generateMovieReview as jest.Mock;
@@ -15,7 +16,7 @@ describe("reviewHandler - unit tests", () => {
       method: "POST",
       body: { regisseur: "Director" },
     });
-    await reviewHandler(req as any, res as any);
+    await reviewHandler(req as NextApiRequest, res as NextApiResponse);
     expect(res._getStatusCode()).toBe(400);
     expect(JSON.parse(res._getData())).toEqual({
       error: "Please provide both a movie title and a director.",
@@ -27,7 +28,7 @@ describe("reviewHandler - unit tests", () => {
       method: "POST",
       body: { title: "Title" },
     });
-    await reviewHandler(req as any, res as any);
+    await reviewHandler(req as NextApiRequest, res as NextApiResponse);
     expect(res._getStatusCode()).toBe(400);
     expect(JSON.parse(res._getData())).toEqual({
       error: "Please provide both a movie title and a director.",
@@ -39,7 +40,7 @@ describe("reviewHandler - unit tests", () => {
     mockedGenerateMovieReview.mockResolvedValue(fakeReview);
     const body = { title: "Inception", regisseur: "Christopher Nolan" };
     const { req, res } = createMocks({ method: "POST", body });
-    await reviewHandler(req as any, res as any);
+    await reviewHandler(req as NextApiRequest, res as NextApiResponse);
     expect(mockedGenerateMovieReview).toHaveBeenCalledWith(
       body.title,
       body.regisseur
@@ -52,7 +53,7 @@ describe("reviewHandler - unit tests", () => {
     mockedGenerateMovieReview.mockRejectedValue(new Error("Service failure"));
     const body = { title: "Inception", regisseur: "Christopher Nolan" };
     const { req, res } = createMocks({ method: "POST", body });
-    await reviewHandler(req as any, res as any);
+    await reviewHandler(req as NextApiRequest, res as NextApiResponse);
     expect(res._getStatusCode()).toBe(500);
     expect(JSON.parse(res._getData()).error).toMatch(
       /Failed to generate review: Service failure/
