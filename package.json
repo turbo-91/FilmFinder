@@ -11,7 +11,7 @@
     "test:watch": "jest --watch"
   },
   "dependencies": {
-    "@auth/mongodb-adapter": "^3.8.0",
+    "@auth/mongodb-adapter": "^3.9.1",
     "@next/font": "^14.2.15",
     "@types/react-slick": "^0.23.13",
     "axios": "^1.7.9",
