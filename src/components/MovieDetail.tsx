@@ -8,7 +8,7 @@ import { customLoader } from "@/lib/constants/constants";
 import movieThumbnail from "/public/movieThumbnail.png";
 import styled from "styled-components";
 import { Star } from "lucide-react";
-import ReviewTester from "./Review";
+import Review from "./Review";
 
 const DetailContainer = styled.div`
   display: flex;
@@ -210,7 +210,7 @@ export default function MovieDetail({ movie, onBack }: MovieDetailProps) {
           </ToggleButton>
           <Info>Regie: {movie.regisseur}</Info>
           <Info>Mit {movie.stars}</Info>
-          <ReviewTester movie={movie} />
+          <Review movie={movie} />
           <BackButton onClick={onBack}>Zurück</BackButton>
         </ContentContainer>
       </UnitContainer>

@@ -17,7 +17,7 @@ const ReviewButton = styled.button`
   box-shadow: none;
 `;
 
-const Review = styled.p`
+const ReviewText = styled.p`
   font-size: clamp(0.4rem, 1vw, 0.9rem);
   line-height: var(--line-height);
   text-align: justify;
@@ -36,7 +36,7 @@ interface ReviewTesterProps {
   movie: IMovie;
 }
 
-export default function ReviewTester(props: Readonly<ReviewTesterProps>) {
+export default function Review(props: Readonly<ReviewTesterProps>) {
   const { movie } = props;
   const title = movie.title;
   const regisseur = movie.regisseur;
@@ -86,7 +86,7 @@ export default function ReviewTester(props: Readonly<ReviewTesterProps>) {
       {review && (
         <>
           <Info>Unser Filmkritiker meint:</Info>
-          <Review>&quot;{review}&quot;</Review>
+          <ReviewText>&quot;{review}&quot;</ReviewText>
         </>
       )}
     </div>
