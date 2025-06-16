@@ -2,7 +2,6 @@ import axios from "axios";
 import { netzkinoURL, netzkinoKey } from "@/lib/constants/constants";
 import { IMovie } from "@/db/models/Movie";
 import { postQuery } from "./queryService";
-const movieThumbnail = require("@/public/movieThumbnail.png");
 import { NetzkinoMovie } from "@/types/NetzkinoMovie";
 import getApiLink from "@/lib/getApiLink";
 import starSanitizer from "@/lib/starSanitizer";
@@ -26,7 +25,7 @@ export async function fetchMoviesFromNetzkino(
     }
 
     const today = new Date().toLocaleDateString();
-    const fallbackImg = movieThumbnail.src;
+    const fallbackImg = "/movieThumbnail.png";
 
     return response.data.posts.map((movie: NetzkinoMovie) => {
       const imdbLink = movie.custom_fields?.["IMDb-Link"]?.[0];

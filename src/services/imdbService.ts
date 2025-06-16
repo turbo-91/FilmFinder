@@ -1,19 +1,22 @@
 import axios from "axios";
-const movieThumbnail = require("@/public/movieThumbnail.png");
 import { imgImdbUrl } from "@/lib/constants/constants";
 import { IMovie } from "@/db/models/Movie";
 
 // ensures that movies get image from both APIs
+
+const movieThumbnailSrc = "/movieThumbnail.png";
 
 export async function addImgImdb(movie: IMovie) {
   if (movie.posterImdb === "n/a") return;
   const imdbData = await axios.get(movie.posterImdb);
   const poster = imdbData.data.movie_results?.[0]?.poster_path;
   const backdrop = imdbData.data.movie_results?.[0]?.backdrop_path;
-  movie.posterImdb = poster ? `${imgImdbUrl}${poster}` : movieThumbnail.src;
+
+  movie.posterImdb = poster ? `${imgImdbUrl}${poster}` : movieThumbnailSrc;
   movie.backdropImdb = backdrop
     ? `${imgImdbUrl}${backdrop}`
-    : movieThumbnail.src;
+    : movieThumbnailSrc;
+
   return movie;
 }
 
