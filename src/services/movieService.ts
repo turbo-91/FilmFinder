@@ -3,7 +3,7 @@ import Movie from "../db/models/Movie";
 import { isQueryInDb, postQuery } from "./queryService";
 import { getMoviesByQuery } from "./movieDB";
 import { IMovie } from "@/db/models/Movie";
-import { fetchMoviesFromNetzkino } from "./netzkinoFetcher";
+import { fetchMoviesFromNetzkino } from "./netzkinoService";
 import { postMovies } from "./movieDB";
 import { enrichMovies } from "./imdbService";
 import Bottleneck from "bottleneck";

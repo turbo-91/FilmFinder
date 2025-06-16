@@ -6,7 +6,7 @@ jest.mock("bottleneck", () =>
 
 import dbConnect from "@/db/mongodb";
 import Movie, { IMovie } from "@/db/models/Movie";
-import { fetchMoviesFromNetzkino } from "@/services/netzkinoFetcher";
+import { fetchMoviesFromNetzkino } from "@/services/netzkinoService";
 import { isQueryInDb, postQuery } from "@/services/queryService";
 import { getMoviesByQuery, postMovies } from "@/services/movieDB";
 import { enrichMovies } from "@/services/imdbService";
