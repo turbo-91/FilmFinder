@@ -9,6 +9,7 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/router";
 import styled from "styled-components";
 import { SquareLoader } from "react-spinners";
+import ReviewTester from "@/components/Review";
 
 const SearchContainer = styled.div`
   display: flex;
